@@ -7,6 +7,11 @@ This guide outlines the professional workflow for preparing transit and traffic 
 2. **Coordinate System**: Ensure all layers are set to `EPSG:4326` (WGS 84).
 3. **Field Cleaning**: Use `Refactor Fields` to rename and drop unnecessary columns.
 
+> [!CAUTION]
+> ### 🚨 The Golden Rule of Road Integrity
+> **Never use the geometry included in raw traffic/link data.**
+> Traffic link data often uses straight lines between two points, ignoring actual road curves. Always **JOIN** the traffic attributes to your **refined OSM Road Centerline** geometry. This is the only way to avoid the "zig-zag" or "straight-line" distortion on your Map.
+
 ## STEP 2: Geometry Refinement (Enterprise Standard)
 To ensure traffic lines accurately follow the road network in Web GIS, follow these steps:
 
