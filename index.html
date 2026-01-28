@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Transit GIS | QGIS Workflow</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Sidebar UI -->
+    <div class="sidebar">
+        <header>
+            <div class="logo">
+                <span class="icon">🛰️</span>
+                <div class="title">
+                    <h1>OpenTransit <span>GIS</span></h1>
+                    <p>QGIS Data Pipeline</p>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="routes">노선</button>
+            <button class="tab-btn" data-tab="analysis">공간분석</button>
+        </nav>
+
+        <section class="content">
+            <div id="route-panel" class="panel active">
+                <div class="filter-box">
+                    <input type="text" placeholder="노선 ID 또는 이름 검색..." id="route-search">
+                </div>
+                <div id="route-list" class="list-container">
+                    <p class="empty-msg">QGIS에서 데이터를 불러오는 중...</p>
+                </div>
+            </div>
+
+            <div id="analysis-panel" class="panel">
+                <div class="analysis-card">
+                    <h3>정류장 밀도 분석 (Heatmap)</h3>
+                    <p>QGIS에서 가공된 히트맵 레이어를 시각화합니다.</p>
+                    <button class="btn-toggle" id="toggle-heatmap">레이어 켜기</button>
+                </div>
+                <div class="analysis-card">
+                    <h3>300m 버퍼 분석</h3>
+                    <p>정류장 반경 생활권 분석 결과입니다.</p>
+                    <button class="btn-toggle" id="toggle-buffer">레이어 켜기</button>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="data-status">
+                <div class="status-dot online"></div>
+                <span>Spatial DB Connected</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Mock/Processed Data -->
+    <script src="mock-data.js"></script>
+    <script src="map-logic.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+# QGIS Data Processing Guide (Public Transport GIS)
+
+This guide outlines the professional workflow for preparing transit data for the web using QGIS.
+
+## STEP 1: Data Preparation
+1. **Import Data**: Load your CSV/SHP files into QGIS.
+2. **Coordinate System**: Ensure all layers are set to `EPSG:4326` (WGS 84).
+   - Right-click Layer > Layer CRS > Set Layer CRS...
+3. **Field Cleaning**: Use `Refactor Fields` to rename and drop unnecessary columns.
+
+## STEP 2: Geometry Validation (Critical)
+1. **Fix Geometries**: Run `Vector > Geometry Tools > Fix Geometries`.
+2. **Check Validity**: Use `Vector > Geometry Tools > Check Validity` to find self-intersections or open rings.
+3. **Snap to Road**: (Optional) Use the `Snap geometries to layer` tool to align bus routes with the road network.
+
+## STEP 3: Spatial Analysis
+1. **Dissolve**: If a bus route is split into multiple segments, use `Vector > Geoprocessing Tools > Dissolve` on the `route_id` field.
+2. **Simplify**: For Web GIS performance, run `Vector > Geometry Tools > Simplify` (Tolerance: 0.0001).
+
+## STEP 4: Export for Web/DB
+- **For Web**: Right-click > Export > Save Features As... > **GeoJSON**.
+  - Set `COORDINATE_PRECISION` to `6` to reduce file size.
+- **For Database**: 
+  1. Open `DB Manager` in QGIS.
+  2. Connect to your MySQL/MariaDB.
+  3. Import the layer directly into the tables created by `schema.sql`.
+
+> [!TIP]
+> Always keep a backup of the original dataset before performing 'Dissolve' or 'Simplify' operations.
