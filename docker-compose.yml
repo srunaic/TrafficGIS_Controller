@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  web:
+    image: nginx:latest
+    volumes:
+      - ./public:/usr/share/nginx/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+
+  php:
+    build: ./docker/php
+    volumes:
+      - ./api:/var/www/html
+
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: trafficgis
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d

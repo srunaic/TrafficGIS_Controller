@@ -24,12 +24,13 @@ CREATE TABLE IF NOT EXISTS `bus_route` (
 -- 2. Traffic Congestion Table
 CREATE TABLE IF NOT EXISTS `traffic_link` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `link_id` VARCHAR(20) NOT NULL,
+    `road_id` VARCHAR(50) NOT NULL,
     `time_slot` VARCHAR(5) NOT NULL, -- e.g., '08:00', '18:00'
-    `congestion_level` ENUM('정체', '서행', '원활') NOT NULL,
+    `congestion` ENUM('원활', '서행', '정체') NOT NULL,
     `avg_speed` INT,
     `geom` LINESTRING NOT NULL,
-    SPATIAL INDEX(`geom`)
+    SPATIAL INDEX idx_geom (`geom`),
+    INDEX idx_time (`time_slot`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 3. Relation Table (Route to Stops)

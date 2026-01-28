@@ -29,6 +29,13 @@ This guide outlines the professional workflow for preparing transit data for the
    ```
 3. **Time-Slot Segmentation**: Filter data by time (e.g., `time = '08:00'`) and export as separate GeoJSONs or a combined DB table with a `time_slot` column.
 
+## QGIS 실무 분석 시나리오 (Portfolio Scenario)
+1. **데이터 조인**: `road_id` 기반으로 도로 네트워크(SHP)와 교통속도(CSV) 결합.
+2. **속성 계산**: 필드 계산기를 사용하여 `congestion` 필드 생성.
+   - `정체`: < 20km/h, `서행`: 20~40km/h, `원활`: > 40km/h.
+3. **공간 필터링**: `time_slot` = '08:00' 등의 필터를 적용하여 시간대별 분석 수행.
+4. **결과 검증**: 도로와 정류장 레이어를 중첩하여 "노선별 지연 구간" 시각적 확인.
+
 ## STEP 5: Export for Web/DB
 - **For Web**: Right-click > Export > Save Features As... > **GeoJSON**.
   - Set `COORDINATE_PRECISION` to `6` to reduce file size.
