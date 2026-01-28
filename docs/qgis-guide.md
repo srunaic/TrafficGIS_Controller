@@ -17,7 +17,19 @@ This guide outlines the professional workflow for preparing transit data for the
 1. **Dissolve**: If a bus route is split into multiple segments, use `Vector > Geoprocessing Tools > Dissolve` on the `route_id` field.
 2. **Simplify**: For Web GIS performance, run `Vector > Geometry Tools > Simplify` (Tolerance: 0.0001).
 
-## STEP 4: Export for Web/DB
+## STEP 4: Traffic Congestion Analysis (New)
+1. **Join Traffic Data**: Join your Road Network layer with the Traffic CSV (Speed/Volume) using `Link_ID`.
+2. **Calculate Congestion**: Use Field Calculator to create a `congestion` field:
+   ```sql
+   CASE 
+     WHEN "speed" < 20 THEN '정체'
+     WHEN "speed" < 40 THEN '서행'
+     ELSE '원활'
+   END
+   ```
+3. **Time-Slot Segmentation**: Filter data by time (e.g., `time = '08:00'`) and export as separate GeoJSONs or a combined DB table with a `time_slot` column.
+
+## STEP 5: Export for Web/DB
 - **For Web**: Right-click > Export > Save Features As... > **GeoJSON**.
   - Set `COORDINATE_PRECISION` to `6` to reduce file size.
 - **For Database**: 

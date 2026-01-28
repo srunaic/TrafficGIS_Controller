@@ -195,6 +195,40 @@ header {
     border-color: #10b981;
 }
 
+/* Traffic Time Control */
+.traffic-time-control {
+    margin-top: 30px;
+    padding: 16px;
+    background: #f1f5f9;
+    border-radius: var(--radius);
+}
+
+.time-slider-container {
+    padding: 10px 0;
+}
+
+#time-slider {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.time-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+.current-time-badge {
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 12px;
+    color: var(--accent);
+}
+
 /* Footer */
 footer {
     padding: 16px 24px;

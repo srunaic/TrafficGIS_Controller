@@ -21,9 +21,18 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // 3. Layer Groups
 const routeLayerGroup = L.layerGroup().addTo(map);
 const stopLayerGroup = L.layerGroup().addTo(map);
+const trafficLayerGroup = L.layerGroup().addTo(map);
 
 // 4. Data Loading Logic
 function loadData() {
+    refreshTransit();
+    refreshTraffic('08');
+}
+
+function refreshTransit() {
+    routeLayerGroup.clearLayers();
+    stopLayerGroup.clearLayers();
+
     const routes = window.QGIS_Output.getRoutes();
     const stops = window.QGIS_Output.getStops();
 
@@ -57,6 +66,31 @@ function loadData() {
     }).addTo(stopLayerGroup);
 
     populateSidebar(routes);
+}
+
+function refreshTraffic(timeSlot) {
+    trafficLayerGroup.clearLayers();
+    const trafficData = window.QGIS_Output.getTrafficData(timeSlot);
+
+    L.geoJSON(trafficData, {
+        style: (feature) => ({
+            color: getTrafficColor(feature.properties.congestion_level),
+            weight: 6,
+            opacity: 0.8
+        }),
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(`<strong>도로 체증 상태</strong><br>링크 ID: ${feature.properties.link_id}<br>상태: ${feature.properties.congestion_level}<br>속도: ${feature.properties.avg_speed}km/h`);
+        }
+    }).addTo(trafficLayerGroup);
+}
+
+function getTrafficColor(level) {
+    switch (level) {
+        case '정체': return '#dc2626'; // Red
+        case '서행': return '#f59e0b'; // Orange
+        case '원활': return '#10b981'; // Green
+        default: return '#94a3b8';
+    }
 }
 
 // 5. Sidebar Interaction
@@ -101,6 +135,16 @@ document.querySelectorAll('.tab-btn').forEach(button => {
         document.getElementById(`${tab}-panel`).classList.add('active');
     };
 });
+
+// Time Slider Listener
+const timeSlider = document.getElementById('time-slider');
+const timeBadge = document.getElementById('selected-time');
+
+timeSlider.oninput = () => {
+    let hour = timeSlider.value.padStart(2, '0');
+    timeBadge.innerText = `${hour}:00`;
+    refreshTraffic(hour);
+};
 
 // 6. Initialize
 loadData();

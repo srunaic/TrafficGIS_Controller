@@ -21,7 +21,18 @@ CREATE TABLE IF NOT EXISTS `bus_route` (
     SPATIAL INDEX(`geom`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. Relation Table (Route to Stops)
+-- 2. Traffic Congestion Table
+CREATE TABLE IF NOT EXISTS `traffic_link` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `link_id` VARCHAR(20) NOT NULL,
+    `time_slot` VARCHAR(5) NOT NULL, -- e.g., '08:00', '18:00'
+    `congestion_level` ENUM('정체', '서행', '원활') NOT NULL,
+    `avg_speed` INT,
+    `geom` LINESTRING NOT NULL,
+    SPATIAL INDEX(`geom`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Relation Table (Route to Stops)
 CREATE TABLE IF NOT EXISTS `route_stop_mapping` (
     `route_id` VARCHAR(20),
     `stop_id` VARCHAR(20),

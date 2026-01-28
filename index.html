@@ -56,6 +56,20 @@
                     <button class="btn-toggle" id="toggle-buffer">레이어 켜기</button>
                 </div>
             </div>
+
+            <div class="traffic-time-control">
+                <div class="section-title">시간대별 교통 체증</div>
+                <div class="time-slider-container">
+                    <input type="range" min="8" max="22" step="2" value="8" id="time-slider">
+                    <div class="time-labels">
+                        <span>08시</span>
+                        <span>12시</span>
+                        <span>18시</span>
+                        <span>22시</span>
+                    </div>
+                </div>
+                <div class="current-time-badge">선택 시간: <span id="selected-time">08:00</span></div>
+            </div>
         </section>
 
         <footer>
