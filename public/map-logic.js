@@ -1,5 +1,5 @@
 /**
- * Map Logic for QGIS-centric Web GIS
+ * Map Logic for QGIS-centric Web GIS - Real-time Edition
  */
 
 // 1. Initialize Map
@@ -9,10 +9,9 @@ const map = L.map('map', {
     zoomControl: false
 });
 
-// Add Zoom Control to Bottom Right
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-// 2. Base Layers (OSM)
+// 2. Base Layers
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
@@ -23,10 +22,13 @@ const routeLayerGroup = L.layerGroup().addTo(map);
 const stopLayerGroup = L.layerGroup().addTo(map);
 const trafficLayerGroup = L.layerGroup().addTo(map);
 
+let currentTrafficLayer;
+let currentTrafficTime = '08';
+
 // 4. Data Loading Logic
-function loadData() {
+function loadInitialData() {
     refreshTransit();
-    refreshTraffic('08');
+    fetchTrafficData(); // Initial load
 }
 
 function refreshTransit() {
@@ -36,7 +38,6 @@ function refreshTransit() {
     const routes = window.QGIS_Output.getRoutes();
     const stops = window.QGIS_Output.getStops();
 
-    // Render Routes
     L.geoJSON(routes, {
         style: (feature) => ({
             color: feature.properties.color || '#3388ff',
@@ -48,7 +49,6 @@ function refreshTransit() {
         }
     }).addTo(routeLayerGroup);
 
-    // Render Stops
     L.geoJSON(stops, {
         pointToLayer: (feature, latlng) => {
             return L.circleMarker(latlng, {
@@ -68,30 +68,44 @@ function refreshTransit() {
     populateSidebar(routes);
 }
 
-function refreshTraffic(timeSlot) {
-    trafficLayerGroup.clearLayers();
+/**
+ * Real-time Traffic Fetching Logic (Bbox + Time)
+ */
+function fetchTrafficData() {
+    const bbox = map.getBounds().toBBoxString(); // minLng,minLat,maxLng,maxLat
 
-    // Cloudflare Pages Functions automatically routes /api/* to the functions directory
-    fetch(`/api/traffic?time=${timeSlot}`)
+    console.log(`Fetching traffic for: ${currentTrafficTime}, Bbox: ${bbox}`);
+
+    fetch(`/api/traffic?time=${currentTrafficTime}&bbox=${bbox}`)
         .then(res => res.json())
-        .then(trafficData => {
-            L.geoJSON(trafficData, {
+        .then(data => {
+            if (currentTrafficLayer) {
+                trafficLayerGroup.removeLayer(currentTrafficLayer);
+            }
+
+            currentTrafficLayer = L.geoJSON(data, {
                 style: (feature) => ({
-                    color: getTrafficColor(feature.properties.congestion_level || feature.properties.congestion),
+                    color: getTrafficColor(feature.properties.congestion),
                     weight: 6,
-                    opacity: 0.8
+                    opacity: 0.8,
+                    lineJoin: 'round'
                 }),
                 onEachFeature: (feature, layer) => {
-                    layer.bindPopup(`<strong>도로 체증 상태</strong><br>링크 ID: ${feature.properties.link_id}<br>상태: ${feature.properties.congestion || feature.properties.congestion_level}<br>속도: ${feature.properties.avg_speed}km/h`);
+                    layer.bindPopup(`
+                        <div class="traffic-popup">
+                            <h3>🚦 도로 체증 정보</h3>
+                            <p><strong>링크 ID:</strong> ${feature.properties.link_id}</p>
+                            <p><strong>상태:</strong> <span style="color:${getTrafficColor(feature.properties.congestion)}">${feature.properties.congestion}</span></p>
+                            <p><strong>평균 속도:</strong> ${feature.properties.avg_speed} km/h</p>
+                            <p><strong>갱신 시각:</strong> ${new Date(feature.properties.timestamp).toLocaleTimeString()}</p>
+                        </div>
+                    `);
                 }
             }).addTo(trafficLayerGroup);
+
+            updateDataStatus(`Traffic Updated: ${data.features.length} links`);
         })
-        .catch(err => {
-            console.error('Traffic API Error:', err);
-            // Fallback to mock if API fails
-            const mockData = window.QGIS_Output.getTrafficData(timeSlot);
-            // ... (rest of local mock logic handled if needed)
-        });
+        .catch(err => console.error('Traffic API Error:', err));
 }
 
 function getTrafficColor(level) {
@@ -103,58 +117,62 @@ function getTrafficColor(level) {
     }
 }
 
-// 5. Sidebar Interaction
+function updateDataStatus(msg) {
+    const statusText = document.querySelector('.data-status span');
+    if (statusText) statusText.innerText = msg;
+}
+
+// 5. Sidebar & UI Events
 function populateSidebar(routes) {
     const list = document.getElementById('route-list');
     list.innerHTML = '';
-
     routes.features.forEach(feature => {
         const item = document.createElement('div');
-        item.style.padding = '12px';
-        item.style.background = '#f8fafc';
-        item.style.borderRadius = '8px';
-        item.style.cursor = 'pointer';
-        item.style.marginBottom = '8px';
-        item.style.border = '1px solid #e2e8f0';
-
+        item.className = 'route-item-custom';
         item.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="width: 4px; height: 16px; background: ${feature.properties.color}"></div>
                 <div style="font-weight: 600; font-size: 0.9rem;">${feature.properties.route_nm}</div>
             </div>
-            <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">ID: ${feature.properties.route_id}</div>
         `;
-
-        item.onclick = () => {
-            // Find and zoom to route (simplified)
-            map.fitBounds(L.geoJSON(feature).getBounds());
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); // UI feedback simplified
-        };
+        item.onclick = () => map.fitBounds(L.geoJSON(feature).getBounds());
         list.appendChild(item);
     });
 }
 
-// Tab Switching Logic
-document.querySelectorAll('.tab-btn').forEach(button => {
-    button.onclick = () => {
-        const tab = button.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-
-        button.classList.add('active');
-        document.getElementById(`${tab}-panel`).classList.add('active');
-    };
-});
-
-// Time Slider Listener
+// Time Slider
 const timeSlider = document.getElementById('time-slider');
 const timeBadge = document.getElementById('selected-time');
 
 timeSlider.oninput = () => {
     let hour = timeSlider.value.padStart(2, '0');
     timeBadge.innerText = `${hour}:00`;
-    refreshTraffic(hour);
+    currentTrafficTime = hour;
+    fetchTrafficData();
 };
 
-// 6. Initialize
-loadData();
+// 6. Real-time Events
+// A. Map Move End -> Refresh Bbox Data
+map.on('moveend', () => {
+    fetchTrafficData();
+});
+
+// B. Auto Refresh (Every 5 minutes)
+setInterval(() => {
+    console.log('Auto-refreshing traffic data...');
+    fetchTrafficData();
+}, 300000);
+
+// Tab Switching
+document.querySelectorAll('.tab-btn').forEach(button => {
+    button.onclick = () => {
+        const tab = button.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById(`${tab}-panel`).classList.add('active');
+    };
+});
+
+// 7. Initialize
+loadInitialData();

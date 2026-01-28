@@ -9,6 +9,17 @@
     --radius: 12px;
 }
 
+.traffic-popup h3 {
+    margin: 0 0 8px 0;
+    font-size: 0.95rem;
+    color: var(--primary);
+}
+
+.traffic-popup p {
+    margin: 4px 0;
+    font-size: 0.85rem;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
