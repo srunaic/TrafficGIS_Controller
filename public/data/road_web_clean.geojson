@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "road_web_clean",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "road_id": "A101", "congestion": "정체", "avg_speed": 15, "time_slot": "08:00" }, "geometry": { "type": "LineString", "coordinates": [ [ 126.973, 37.564 ], [ 126.973, 37.568 ], [ 126.978, 37.568 ] ] } },
+{ "type": "Feature", "properties": { "road_id": "A102", "congestion": "원활", "avg_speed": 45, "time_slot": "08:00" }, "geometry": { "type": "LineString", "coordinates": [ [ 126.978, 37.568 ], [ 126.985, 37.568 ], [ 126.985, 37.564 ] ] } },
+{ "type": "Feature", "properties": { "road_id": "A103", "congestion": "서행", "avg_speed": 25, "time_slot": "08:00" }, "geometry": { "type": "LineString", "coordinates": [ [ 126.985, 37.564 ], [ 126.978, 37.564 ], [ 126.973, 37.564 ] ] } }
+]
+}
