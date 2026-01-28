@@ -55,26 +55,26 @@ function refreshTransit(city = 'seoul') {
 
 /**
  * Real-time Traffic Fetching Logic (Bbox + Time)
- * Optimized for Refined Road Integrity Data
+ * Optimized for Real-time OSM Data from Overpass API
  */
 function fetchTrafficData() {
     const bbox = map.getBounds().toBBoxString();
     const time = currentTrafficTime;
 
-    // In Production: fetch from Cloudflare API
-    // For SOP Demo: We try to load the 'road_web_clean.geojson' if available
     const apiPath = `/api/traffic?time=${time}&bbox=${bbox}`;
 
-    console.log(`Refreshing Traffic: time=${time}, bbox=${bbox}`);
+    updateDataStatus(`실시간 OSM 도로 수집 중... ⏳`);
 
     fetch(apiPath)
         .then(res => res.json())
         .then(data => {
+            if (data.error) throw new Error(data.error);
             renderTrafficLayer(data);
         })
         .catch(err => {
-            console.warn('API Fetch failed, using static refined sample...');
-            // Fallback to the refined sample for SOP verification
+            console.warn('Overpass API Fetch failed, using sample...', err);
+            updateDataStatus(`API 에러: ${err.message}. 샘플 데이터를 표시합니다.`);
+            // Fallback to sample for demo
             fetch('/data/road_web_clean.geojson')
                 .then(res => res.json())
                 .then(sampleData => renderTrafficLayer(sampleData));
@@ -87,35 +87,42 @@ function renderTrafficLayer(data) {
     }
 
     currentTrafficLayer = L.geoJSON(data, {
-        style: (feature) => ({
-            color: getTrafficColor(feature.properties.congestion),
-            weight: 5,
-            opacity: 0.9,
-            lineCap: 'round',
-            lineJoin: 'round'
-        }),
+        style: (feature) => {
+            // Road-type based weight
+            let weight = 4;
+            if (feature.properties.highway === 'primary') weight = 7;
+            if (feature.properties.highway === 'secondary') weight = 5;
+
+            return {
+                color: getTrafficColor(feature.properties.congestion),
+                weight: weight,
+                opacity: 0.9,
+                lineCap: 'round',
+                lineJoin: 'round'
+            };
+        },
         onEachFeature: (feature, layer) => {
             layer.bindPopup(`
                 <div class="traffic-popup">
-                    <h3 style="border-bottom: 2px solid ${getTrafficColor(feature.properties.congestion)}">🚦 실시간 교통 정보</h3>
-                    <p><strong>도로 ID (Clean):</strong> ${feature.properties.road_id || feature.properties.link_id}</p>
-                    <p><strong>상태:</strong> <span class="badge" style="background:${getTrafficColor(feature.properties.congestion)}; color:white; padding: 2px 6px; border-radius: 4px;">${feature.properties.congestion}</span></p>
+                    <h3 style="border-bottom: 2px solid ${getTrafficColor(feature.properties.congestion)}">🌍 실시간 OSM 데이터</h3>
+                    <p><strong>도로명:</strong> ${feature.properties.name || '이름 없음'}</p>
+                    <p><strong>유형:</strong> <span style="text-transform: capitalize;">${feature.properties.highway}</span></p>
+                    <p><strong>상태:</strong> <span style="font-weight:700; color:${getTrafficColor(feature.properties.congestion)}">${feature.properties.congestion}</span></p>
                     <p><strong>평균 속도:</strong> ${feature.properties.avg_speed} km/h</p>
-                    <p><strong>수집 시각:</strong> ${new Date().toLocaleTimeString()} (Latest)</p>
+                    <p><strong>갱신 시각:</strong> ${new Date(feature.properties.timestamp).toLocaleTimeString()}</p>
                 </div>
             `);
 
-            // Highlight on hover
             layer.on('mouseover', function () {
-                this.setStyle({ weight: 8, opacity: 1 });
+                this.setStyle({ weight: this.options.weight + 2, opacity: 1 });
             });
             layer.on('mouseout', function () {
-                this.setStyle({ weight: 5, opacity: 0.9 });
+                this.setStyle({ weight: this.options.weight - 2, opacity: 0.9 });
             });
         }
     }).addTo(trafficLayerGroup);
 
-    updateDataStatus(`ITS Status: ${data.features.length} links connected`);
+    updateDataStatus(`OSM Real-time: ${data.features.length} roads synced ✅`);
 }
 
 function getTrafficColor(level) {
