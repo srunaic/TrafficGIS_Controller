@@ -2,7 +2,7 @@
 
 QGIS 데이터 파이프라인을 기반으로 한 실시간 교통 체증 및 대중교통 노선 시각화 시스템입니다. 데이터 정합성(Spatial Integrity)을 최우선으로 설계된 엔터프라이즈급 GIS 웹 솔루션입니다.
 
-### 🔗 라이브 데모
+### 🔗 실시간 라이브 교통 상황 분석 GIS 
 **[실시간 서비스 접속하기](https://trafficgis-controller.pages.dev)**
 
 ---
