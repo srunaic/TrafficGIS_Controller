@@ -83,12 +83,24 @@
 
             <!-- Traffic Legend -->
             <div class="traffic-legend">
-                <div class="section-title">교통 범례</div>
+                <div class="section-title">교통 범례 (필터)</div>
                 <div class="legend-content">
-                    <div class="legend-item"><span class="color-box jam"></span> 정체 (&lt; 20km/h)</div>
-                    <div class="legend-item"><span class="color-box slow"></span> 서행 (20~40km/h)</div>
-                    <div class="legend-item"><span class="color-box smooth"></span> 원활 (40~60km/h)</div>
-                    <div class="legend-item"><span class="color-box high"></span> 쾌속 (&gt; 60km/h)</div>
+                    <label class="legend-item">
+                        <input type="checkbox" checked data-filter="정체">
+                        <span class="color-box jam"></span> 정체 (&lt; 20km/h)
+                    </label>
+                    <label class="legend-item">
+                        <input type="checkbox" checked data-filter="서행">
+                        <span class="color-box slow"></span> 서행 (20~40km/h)
+                    </label>
+                    <label class="legend-item">
+                        <input type="checkbox" checked data-filter="원활">
+                        <span class="color-box smooth"></span> 원활 (40~60km/h)
+                    </label>
+                    <label class="legend-item">
+                        <input type="checkbox" checked data-filter="쾌속">
+                        <span class="color-box high"></span> 쾌속 (&gt; 60km/h)
+                    </label>
                 </div>
             </div>
         </section>
@@ -99,6 +111,12 @@
                 <span>Spatial DB Connected</span>
             </div>
         </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+        <p>실시간 도로 데이터 수집 중...</p>
     </div>
 
     <!-- Leaflet JS -->

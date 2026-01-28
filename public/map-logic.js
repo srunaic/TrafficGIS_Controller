@@ -24,11 +24,24 @@ const trafficLayerGroup = L.layerGroup().addTo(map);
 
 let currentTrafficLayer;
 let currentTrafficTime = '08';
+let latestTrafficData = null;
+let activeTrafficFilters = ['정체', '서행', '원활', '쾌속'];
+
+function showLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('hidden');
+}
 
 // 4. Data Loading Logic
 function loadInitialData() {
     refreshTransit('seoul');
     fetchTrafficData(); // Initial load
+    setupLegendFilters();
 }
 
 function refreshTransit(city = 'seoul') {
@@ -64,12 +77,14 @@ function fetchTrafficData() {
     const apiPath = `/api/traffic?time=${time}&bbox=${bbox}`;
 
     updateDataStatus(`실시간 OSM 도로 수집 중... ⏳`);
+    showLoading();
 
     fetch(apiPath)
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
-            renderTrafficLayer(data);
+            latestTrafficData = data;
+            applyTrafficFilter();
         })
         .catch(err => {
             console.warn('Overpass API Fetch failed, using sample...', err);
@@ -77,8 +92,41 @@ function fetchTrafficData() {
             // Fallback to sample for demo
             fetch('/data/road_web_clean.geojson')
                 .then(res => res.json())
-                .then(sampleData => renderTrafficLayer(sampleData));
-        });
+                .then(sampleData => {
+                    latestTrafficData = sampleData;
+                    applyTrafficFilter();
+                });
+        })
+        .finally(() => hideLoading());
+}
+
+function applyTrafficFilter() {
+    if (!latestTrafficData) return;
+
+    const filteredFeatures = latestTrafficData.features.filter(f =>
+        activeTrafficFilters.includes(f.properties.congestion)
+    );
+
+    const filteredData = {
+        ...latestTrafficData,
+        features: filteredFeatures
+    };
+
+    renderTrafficLayer(filteredData);
+}
+
+function setupLegendFilters() {
+    document.querySelectorAll('.legend-item input').forEach(input => {
+        input.onchange = (e) => {
+            const filter = e.target.getAttribute('data-filter');
+            if (e.target.checked) {
+                if (!activeTrafficFilters.includes(filter)) activeTrafficFilters.push(filter);
+            } else {
+                activeTrafficFilters = activeTrafficFilters.filter(f => f !== filter);
+            }
+            applyTrafficFilter();
+        };
+    });
 }
 
 function renderTrafficLayer(data) {
