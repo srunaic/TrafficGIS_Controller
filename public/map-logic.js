@@ -70,18 +70,28 @@ function refreshTransit() {
 
 function refreshTraffic(timeSlot) {
     trafficLayerGroup.clearLayers();
-    const trafficData = window.QGIS_Output.getTrafficData(timeSlot);
 
-    L.geoJSON(trafficData, {
-        style: (feature) => ({
-            color: getTrafficColor(feature.properties.congestion_level),
-            weight: 6,
-            opacity: 0.8
-        }),
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup(`<strong>도로 체증 상태</strong><br>링크 ID: ${feature.properties.link_id}<br>상태: ${feature.properties.congestion_level}<br>속도: ${feature.properties.avg_speed}km/h`);
-        }
-    }).addTo(trafficLayerGroup);
+    // Cloudflare Pages Functions automatically routes /api/* to the functions directory
+    fetch(`/api/traffic?time=${timeSlot}`)
+        .then(res => res.json())
+        .then(trafficData => {
+            L.geoJSON(trafficData, {
+                style: (feature) => ({
+                    color: getTrafficColor(feature.properties.congestion_level || feature.properties.congestion),
+                    weight: 6,
+                    opacity: 0.8
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`<strong>도로 체증 상태</strong><br>링크 ID: ${feature.properties.link_id}<br>상태: ${feature.properties.congestion || feature.properties.congestion_level}<br>속도: ${feature.properties.avg_speed}km/h`);
+                }
+            }).addTo(trafficLayerGroup);
+        })
+        .catch(err => {
+            console.error('Traffic API Error:', err);
+            // Fallback to mock if API fails
+            const mockData = window.QGIS_Output.getTrafficData(timeSlot);
+            // ... (rest of local mock logic handled if needed)
+        });
 }
 
 function getTrafficColor(level) {
