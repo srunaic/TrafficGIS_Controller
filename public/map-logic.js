@@ -206,6 +206,58 @@ document.querySelectorAll('.tab-btn').forEach(button => {
     };
 });
 
+// Spatial Analysis Toggles
+const heatmapLayerGroup = L.layerGroup().addTo(map);
+const bufferLayerGroup = L.layerGroup().addTo(map);
+
+document.getElementById('toggle-heatmap').onclick = function () {
+    if (heatmapLayerGroup.getLayers().length > 0) {
+        heatmapLayerGroup.clearLayers();
+        this.innerText = '레이어 켜기';
+        this.classList.remove('active');
+    } else {
+        this.innerText = '레이어 끄기';
+        this.classList.add('active');
+
+        // Load Heatmap Data
+        const data = window.QGIS_Output.getHeatmapData();
+        L.geoJSON(data, {
+            pointToLayer: (feature, latlng) => {
+                return L.circleMarker(latlng, {
+                    radius: 20,
+                    fillColor: "#ff4400",
+                    color: "none",
+                    fillOpacity: 0.4
+                });
+            }
+        }).addTo(heatmapLayerGroup);
+        map.flyTo([37.565, 126.975], 14);
+    }
+};
+
+document.getElementById('toggle-buffer').onclick = function () {
+    if (bufferLayerGroup.getLayers().length > 0) {
+        bufferLayerGroup.clearLayers();
+        this.innerText = '레이어 켜기';
+        this.classList.remove('active');
+    } else {
+        this.innerText = '레이어 끄기';
+        this.classList.add('active');
+
+        // Load Buffer Data
+        const data = window.QGIS_Output.getBufferData();
+        L.geoJSON(data, {
+            style: {
+                color: "#3b82f6",
+                weight: 2,
+                fillColor: "#3b82f6",
+                fillOpacity: 0.2
+            }
+        }).addTo(bufferLayerGroup);
+        map.flyTo([37.565, 126.97], 14);
+    }
+};
+
 // Region Selection
 const citySelect = document.getElementById('city-select');
 const cityCoords = {
