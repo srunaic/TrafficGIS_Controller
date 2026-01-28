@@ -26,10 +26,11 @@ export async function onRequest(context) {
             const coordinates = way.geometry.map(point => [point.lon, point.lat]);
 
             // 3. Inject Dynamic Traffic Attributes (Mocked for now, but on real geometry)
-            const speed = Math.floor(Math.random() * 60) + 10;
+            const speed = Math.floor(Math.random() * 100) + 10;
             let congestion = '원활';
             if (speed < 20) congestion = '정체';
             else if (speed < 40) congestion = '서행';
+            else if (speed > 70) congestion = '쾌속';
 
             return {
                 type: 'Feature',

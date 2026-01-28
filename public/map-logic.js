@@ -130,6 +130,7 @@ function getTrafficColor(level) {
         case '정체': return '#dc2626'; // Red
         case '서행': return '#f59e0b'; // Orange
         case '원활': return '#10b981'; // Green
+        case '쾌속': return '#2563eb'; // Blue
         default: return '#94a3b8';
     }
 }

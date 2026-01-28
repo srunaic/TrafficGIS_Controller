@@ -306,6 +306,10 @@ header {
     background-color: #10b981;
 }
 
+.color-box.high {
+    background-color: #2563eb;
+}
+
 /* Footer */
 footer {
     padding: 16px 24px;
