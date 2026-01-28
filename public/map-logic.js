@@ -166,13 +166,36 @@ setInterval(() => {
 // Tab Switching
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.onclick = () => {
-        const tab = button.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        button.classList.add('active');
-        document.getElementById(`${tab}-panel`).classList.add('active');
+        const tab = button.getAttribute('data-tab'); // e.g., 'routes'
+        const panelId = tab === 'routes' ? 'route-panel' : `${tab}-panel`;
+        const targetPanel = document.getElementById(panelId);
+
+        if (targetPanel) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            button.classList.add('active');
+            targetPanel.classList.add('active');
+        }
     };
 });
+
+// Region Selection
+const citySelect = document.getElementById('city-select');
+const cityCoords = {
+    seoul: [37.5665, 126.9780],
+    busan: [35.1796, 129.0756],
+    daegu: [35.8714, 128.6014],
+    incheon: [37.4563, 126.7052],
+    gwangju: [35.1595, 126.8526],
+    daejeon: [36.3504, 127.3845]
+};
+
+citySelect.onchange = () => {
+    const city = citySelect.value;
+    if (cityCoords[city]) {
+        map.flyTo(cityCoords[city], 12);
+    }
+};
 
 // 7. Initialize
 loadInitialData();

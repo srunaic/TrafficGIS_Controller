@@ -1,64 +1,50 @@
 export async function onRequest(context) {
     const { searchParams } = new URL(context.request.url);
     const time = searchParams.get('time') || '08';
-    const bbox = searchParams.get('bbox'); // minX,minY,maxX,maxY
+    const bbox = searchParams.get('bbox');
 
-    /**
-     * Real-time Traffic Data Logic
-     * In a production environment with MariaDB/PostGIS:
-     * SELECT * FROM traffic_link 
-     * WHERE time_slot = :time 
-     * AND MBRIntersects(geom, ST_GeomFromText('POLYGON((...))'))
-     */
+    // Nationwide Real-time Traffic Data (Mock)
+    // We generate dynamic data based on the requested bbox area
+    const features = [];
 
-    const allData = {
-        '08': [
-            { id: 'L1', congestion: '정체', speed: 15, coords: [[126.97, 37.56], [126.98, 37.56]] },
-            { id: 'L2', congestion: '정체', speed: 12, coords: [[126.98, 37.56], [126.98, 37.57]] },
-            { id: 'L3', congestion: '서행', speed: 30, coords: [[126.96, 37.55], [126.97, 37.56]] },
-            { id: 'L4', congestion: '원활', speed: 55, coords: [[126.99, 37.57], [127.00, 37.58]] }
-        ],
-        '18': [
-            { id: 'L1', congestion: '정체', speed: 10, coords: [[126.97, 37.56], [126.98, 37.56]] },
-            { id: 'L2', congestion: '서행', speed: 25, coords: [[126.98, 37.56], [126.98, 37.57]] },
-            { id: 'L5', congestion: '정체', speed: 8, coords: [[126.95, 37.54], [126.96, 37.55]] }
-        ]
-    };
-
-    let selected = allData[time] || allData['08'];
-
-    // Simple Mock Bbox Filtering Logic
     if (bbox) {
-        const [minX, minY, maxX, maxY] = bbox.split(',').map(Number);
-        selected = selected.filter(item => {
-            // Check if any coordinate of the line is within the bbox
-            return item.coords.some(([lng, lat]) =>
-                lng >= minX && lng <= maxX && lat >= minY && lat <= maxY
-            );
-        });
-    }
+        const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
 
-    const features = selected.map(item => ({
-        type: 'Feature',
-        properties: {
-            link_id: item.id,
-            congestion: item.congestion,
-            avg_speed: item.speed,
-            timestamp: new Date().toISOString()
-        },
-        geometry: {
-            type: 'LineString',
-            coordinates: item.coords
+        // Generate 5-10 random road segments within the visible bbox
+        const count = 8;
+        for (let i = 0; i < count; i++) {
+            const startLng = minLng + Math.random() * (maxLng - minLng);
+            const startLat = minLat + Math.random() * (maxLat - minLat);
+            const endLng = startLng + (Math.random() - 0.5) * 0.01;
+            const endLat = startLat + (Math.random() - 0.5) * 0.01;
+
+            const speed = Math.floor(Math.random() * 60) + 10;
+            let congestion = '원활';
+            if (speed < 20) congestion = '정체';
+            else if (speed < 40) congestion = '서행';
+
+            features.push({
+                type: 'Feature',
+                properties: {
+                    link_id: `L-${Math.floor(Math.random() * 90000) + 10000}`,
+                    congestion: congestion,
+                    avg_speed: speed,
+                    timestamp: new Date().toISOString()
+                },
+                geometry: {
+                    type: 'LineString',
+                    coordinates: [[startLng, startLat], [endLng, endLat]]
+                }
+            });
         }
-    }));
+    }
 
     return new Response(JSON.stringify({
         type: 'FeatureCollection',
         features: features,
         metadata: {
-            bbox: bbox,
-            time: time,
-            count: features.length
+            timestamp: new Date().toISOString(),
+            region_count: features.length
         }
     }), {
         headers: {

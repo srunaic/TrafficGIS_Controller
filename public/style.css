@@ -83,6 +83,30 @@ header {
     letter-spacing: 0.05em;
 }
 
+.region-selector {
+    margin-top: 16px;
+}
+
+#city-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    background-color: var(--bg-main);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#city-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 /* Tabs */
 .tabs {
     display: flex;
