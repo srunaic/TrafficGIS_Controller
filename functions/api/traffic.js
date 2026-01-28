@@ -3,20 +3,23 @@ export async function onRequest(context) {
     const time = searchParams.get('time') || '08';
     const bbox = searchParams.get('bbox');
 
-    // Nationwide Real-time Traffic Data (Mock)
-    // We generate dynamic data based on the requested bbox area
     const features = [];
 
     if (bbox) {
         const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
 
-        // Generate 5-10 random road segments within the visible bbox
-        const count = 8;
+        // Improved Mock Generation: Orthogonal "Grid-like" Road Segments
+        const count = 12;
         for (let i = 0; i < count; i++) {
             const startLng = minLng + Math.random() * (maxLng - minLng);
             const startLat = minLat + Math.random() * (maxLat - minLat);
-            const endLng = startLng + (Math.random() - 0.5) * 0.01;
-            const endLat = startLat + (Math.random() - 0.5) * 0.01;
+
+            // Force segments to be either horizontal or vertical for "road-like" look
+            const isVertical = Math.random() > 0.5;
+            const length = 0.005; // ~500m
+
+            const endLng = isVertical ? startLng : startLng + (Math.random() > 0.5 ? length : -length);
+            const endLat = isVertical ? startLat + (Math.random() > 0.5 ? length : -length) : startLat;
 
             const speed = Math.floor(Math.random() * 60) + 10;
             let congestion = '원활';
@@ -41,11 +44,7 @@ export async function onRequest(context) {
 
     return new Response(JSON.stringify({
         type: 'FeatureCollection',
-        features: features,
-        metadata: {
-            timestamp: new Date().toISOString(),
-            region_count: features.length
-        }
+        features: features
     }), {
         headers: {
             'Content-Type': 'application/json',

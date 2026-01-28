@@ -27,43 +27,28 @@ let currentTrafficTime = '08';
 
 // 4. Data Loading Logic
 function loadInitialData() {
-    refreshTransit();
+    refreshTransit('seoul');
     fetchTrafficData(); // Initial load
 }
 
-function refreshTransit() {
+function refreshTransit(city = 'seoul') {
     routeLayerGroup.clearLayers();
     stopLayerGroup.clearLayers();
 
-    const routes = window.QGIS_Output.getRoutes();
+    const routes = window.QGIS_Output.getRoutes(city);
+    // Stops could also be regional, but using global mock for now
     const stops = window.QGIS_Output.getStops();
 
     L.geoJSON(routes, {
         style: (feature) => ({
             color: feature.properties.color || '#3388ff',
-            weight: 4,
-            opacity: 0.7
+            weight: 5,
+            opacity: 0.8
         }),
         onEachFeature: (feature, layer) => {
-            layer.bindPopup(`<strong>노선명: ${feature.properties.route_nm}</strong><br>ID: ${feature.properties.route_id}`);
+            layer.bindPopup(`<strong>🚌 노선 정보</strong><br>노선명: ${feature.properties.route_nm}<br>ID: ${feature.properties.route_id}`);
         }
     }).addTo(routeLayerGroup);
-
-    L.geoJSON(stops, {
-        pointToLayer: (feature, latlng) => {
-            return L.circleMarker(latlng, {
-                radius: 6,
-                fillColor: "#ffffff",
-                color: "#3b82f6",
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
-        },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup(`<strong>정류장: ${feature.properties.stop_nm}</strong><br>ID: ${feature.properties.stop_id}`);
-        }
-    }).addTo(stopLayerGroup);
 
     populateSidebar(routes);
 }
@@ -73,8 +58,6 @@ function refreshTransit() {
  */
 function fetchTrafficData() {
     const bbox = map.getBounds().toBBoxString(); // minLng,minLat,maxLng,maxLat
-
-    console.log(`Fetching traffic for: ${currentTrafficTime}, Bbox: ${bbox}`);
 
     fetch(`/api/traffic?time=${currentTrafficTime}&bbox=${bbox}`)
         .then(res => res.json())
@@ -87,7 +70,8 @@ function fetchTrafficData() {
                 style: (feature) => ({
                     color: getTrafficColor(feature.properties.congestion),
                     weight: 6,
-                    opacity: 0.8,
+                    opacity: 0.9,
+                    lineCap: 'round',
                     lineJoin: 'round'
                 }),
                 onEachFeature: (feature, layer) => {
@@ -95,7 +79,7 @@ function fetchTrafficData() {
                         <div class="traffic-popup">
                             <h3>🚦 도로 체증 정보</h3>
                             <p><strong>링크 ID:</strong> ${feature.properties.link_id}</p>
-                            <p><strong>상태:</strong> <span style="color:${getTrafficColor(feature.properties.congestion)}">${feature.properties.congestion}</span></p>
+                            <p><strong>상태:</strong> <span style="font-weight:700; color:${getTrafficColor(feature.properties.congestion)}">${feature.properties.congestion}</span></p>
                             <p><strong>평균 속도:</strong> ${feature.properties.avg_speed} km/h</p>
                             <p><strong>갱신 시각:</strong> ${new Date(feature.properties.timestamp).toLocaleTimeString()}</p>
                         </div>
@@ -126,16 +110,36 @@ function updateDataStatus(msg) {
 function populateSidebar(routes) {
     const list = document.getElementById('route-list');
     list.innerHTML = '';
+
+    if (routes.features.length === 0) {
+        list.innerHTML = '<p class="empty-msg">이 지역에 등록된 노선이 없습니다.</p>';
+        return;
+    }
+
     routes.features.forEach(feature => {
         const item = document.createElement('div');
-        item.className = 'route-item-custom';
+        item.style.padding = '12px';
+        item.style.background = '#f8fafc';
+        item.style.borderRadius = '8px';
+        item.style.cursor = 'pointer';
+        item.style.marginBottom = '8px';
+        item.style.border = '1px solid #e2e8f0';
+        item.style.transition = 'all 0.2s';
+
         item.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="width: 4px; height: 16px; background: ${feature.properties.color}"></div>
                 <div style="font-weight: 600; font-size: 0.9rem;">${feature.properties.route_nm}</div>
             </div>
+            <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">ID: ${feature.properties.route_id}</div>
         `;
-        item.onclick = () => map.fitBounds(L.geoJSON(feature).getBounds());
+
+        item.onmouseover = () => item.style.borderColor = '#3b82f6';
+        item.onmouseout = () => item.style.borderColor = '#e2e8f0';
+        item.onclick = () => {
+            const layer = L.geoJSON(feature);
+            map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+        };
         list.appendChild(item);
     });
 }
@@ -152,21 +156,18 @@ timeSlider.oninput = () => {
 };
 
 // 6. Real-time Events
-// A. Map Move End -> Refresh Bbox Data
 map.on('moveend', () => {
     fetchTrafficData();
 });
 
-// B. Auto Refresh (Every 5 minutes)
 setInterval(() => {
-    console.log('Auto-refreshing traffic data...');
     fetchTrafficData();
 }, 300000);
 
 // Tab Switching
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.onclick = () => {
-        const tab = button.getAttribute('data-tab'); // e.g., 'routes'
+        const tab = button.getAttribute('data-tab');
         const panelId = tab === 'routes' ? 'route-panel' : `${tab}-panel`;
         const targetPanel = document.getElementById(panelId);
 
@@ -193,7 +194,9 @@ const cityCoords = {
 citySelect.onchange = () => {
     const city = citySelect.value;
     if (cityCoords[city]) {
-        map.flyTo(cityCoords[city], 12);
+        map.flyTo(cityCoords[city], 13);
+        // NEW: Refresh routes when region changes
+        refreshTransit(city);
     }
 };
 
