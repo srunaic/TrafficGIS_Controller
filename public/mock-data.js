@@ -43,6 +43,26 @@ const QGIS_Output = {
                 { "type": "Feature", "properties": { "stop_id": "S2", "stop_nm": "정류장 B" }, "geometry": { "type": "Point", "coordinates": [128.60, 35.87] } }
             ]
         };
+    },
+
+    getHeatmapData: () => {
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "properties": { "intensity": 0.8 }, "geometry": { "type": "Point", "coordinates": [126.975, 37.565] } },
+                { "type": "Feature", "properties": { "intensity": 0.6 }, "geometry": { "type": "Point", "coordinates": [126.980, 37.562] } },
+                { "type": "Feature", "properties": { "intensity": 0.9 }, "geometry": { "type": "Point", "coordinates": [126.972, 37.568] } }
+            ]
+        };
+    },
+
+    getBufferData: () => {
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "properties": { "type": "buffer" }, "geometry": { "type": "Polygon", "coordinates": [[[126.965, 37.56], [126.975, 37.56], [126.975, 37.57], [126.965, 37.57], [126.965, 37.56]]] } }
+            ]
+        };
     }
 };
 
