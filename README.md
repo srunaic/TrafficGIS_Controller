@@ -47,7 +47,6 @@ QGIS 데이터 파이프라인을 기반으로 한 실시간 교통 체증 및 �
 ## 🗺️ 아키텍처 및 SOP
 프로세스의 상세한 내용과 QGIS 작업 가이드는 아래 문서를 참조하세요:
 - [QGIS 작업 표준 가이드 (SOP)](./public/docs/qgis-guide.md)
-- [시스템 구현 워크스루](./walkthrough.md)
 
 ---
 © 2026 Open Transit GIS Project. All rights reserved.
